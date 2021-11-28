@@ -37,7 +37,7 @@ def calc_loss(model, data_loader, device):
             x, y = minibatch
             x, y = x.to(device), y.to(device)
             output = model.forward(x)
-            curr_loss = torch.nn.functional.mse_loss(output, x)
+            curr_loss = torch.nn.functional.mse_loss(output, y)
             loss += curr_loss.item() * x.shape[0]
             data_num += x.shape[0]
 
@@ -63,10 +63,7 @@ def main():
     parser.add_argument("--epoch", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--saved_model_path", type=str, default=None)
-    parser.add_argument("--learning_rate", type=float, default=0.01)
-    parser.add_argument("--data_num_of_imbalanced_class", type=int, default=2500)
-    parser.add_argument("--copy_imbalanced_class", action="store_true")
-    parser.add_argument("--mixup_alpha", type=float, default=1.0)
+    parser.add_argument("--learning_rate", type=float, default=1)
     args = parser.parse_args()
 
     # prepare data_loader
@@ -104,7 +101,7 @@ def main():
             x, y = x.to(device), y.to(device)
             output = model.forward(x)
             save_tensor_as_image(x, y, output, "./result/train_image")
-            loss = torch.nn.functional.mse_loss(output, x, reduction="none").mean([1, 2, 3])
+            loss = torch.nn.functional.mse_loss(output, y, reduction="none").mean([1, 2, 3])
             loss = loss.mean()
 
             elapsed = time.time() - start
