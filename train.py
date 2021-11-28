@@ -43,26 +43,21 @@ def mixup_data(x, y, alpha=1.0):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--hidden_size", type=int, default=512)
-    parser.add_argument("--epoch", type=int, default=200)
+    parser.add_argument("--epoch", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--saved_model_path", type=str, default=None)
-    parser.add_argument("--learning_rate", type=float, default=0.1)
+    parser.add_argument("--learning_rate", type=float, default=0.01)
     parser.add_argument("--data_num_of_imbalanced_class", type=int, default=2500)
     parser.add_argument("--copy_imbalanced_class", action="store_true")
-    parser.add_argument("--use_mixup", action="store_true")
     parser.add_argument("--mixup_alpha", type=float, default=1.0)
     args = parser.parse_args()
 
     # prepare data_loader
-    # transform_normal = torchvision.transforms.Compose(
-    #     [torchvision.transforms.ToTensor(),
-    #      torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
     trainset = Dataset()
     train_size = int(len(trainset) * 0.9)
     valid_size = len(trainset) - train_size
     print(train_size, valid_size)
     trainset, validset = torch.utils.data.random_split(trainset, [train_size, valid_size])
-    # validset.transform = transform_normal
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
     validloader = torch.utils.data.DataLoader(validset, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
@@ -89,13 +84,9 @@ def main():
         model.train()
         for step, minibatch in enumerate(trainloader):
             x, y = minibatch
-            if args.use_mixup:
-                x, y_a, y_b, lam = mixup_data(x, y, alpha=args.mixup_alpha)
-                y_a, y_b = y_a.to(device), y_b.to(device)
             x, y = x.to(device), y.to(device)
             output = model.forward(x)
             loss = torch.nn.functional.mse_loss(output, x, reduction="none").mean([1, 2, 3])
-
             loss = loss.mean()
 
             elapsed = time.time() - start
@@ -131,54 +122,10 @@ def main():
     # load best model
     model.load_state_dict(torch.load(MODEL_SAVE_PATH))
 
-    # save validation loss
-    valid_df.to_csv("./result/loss_log/validation_loss.tsv", sep="\t")
-
     # plot validation loss
     valid_df.plot(x="epoch", y=['loss'], subplots=True, marker=".", figsize=(16, 9))
-    plt.savefig('./result/loss_log/validation_loss.png', bbox_inches="tight", pad_inches=0.05)
+    plt.savefig('./result/loss_log/valid_loss.png', bbox_inches="tight", pad_inches=0.05)
     plt.clf()
-    valid_df.plot(x="epoch", y=[f'accuracy_of_class{i}' for i in range(IMAGE_CHANNEL)], marker=".", figsize=(16, 9))
-    plt.savefig('./result/loss_log/accuracy_for_each_class.png', bbox_inches="tight", pad_inches=0.05)
-
-    # save test loss
-    with open("./result/loss_log/test_loss.txt", "w") as f:
-        test_loss_sum, test_loss_mse, test_loss_ce, test_accuracy, test_accuracy_for_each_class = calc_loss(model, testloader, device, args)
-        f.write("loss_sum\tloss_mse\tloss_ce\taccuracy")
-        f.write("\n")
-
-        f.write(f"{test_loss_sum:.4f}\t{test_loss_mse:.4f}\t{test_loss_ce:.4f}\t{test_accuracy * 100:.1f}")
-        f.write("\n")
-
-    # show reconstruction
-    result_image_dir = "./result/image/"
-    with torch.no_grad():
-        model.eval()
-        for minibatch in testloader:
-            x, y = minibatch
-            x, y = x.to(device), y.to(device)
-            out, _ = model.forward(x)
-
-            x = (x + 1) / 2 * 256
-            x = x.to(torch.uint8)
-
-            out = (out + 1) / 2 * 256
-            out = out.to(torch.uint8)
-
-            for i in range(args.batch_size):
-                origin = x[i].reshape([IMAGE_CHANNEL, IMAGE_WIDTH, IMAGE_WIDTH])
-                origin = origin.permute([1, 2, 0])
-                origin = origin.cpu().numpy()
-
-                pred = out[i].reshape([IMAGE_CHANNEL, IMAGE_WIDTH, IMAGE_WIDTH])
-                pred = pred.permute([1, 2, 0])
-                pred = pred.cpu().numpy()
-
-                pil_img0 = Image.fromarray(origin)
-                pil_img0.save(f"{result_image_dir}/{i}-0.png")
-                pil_img1 = Image.fromarray(pred)
-                pil_img1.save(f"{result_image_dir}/{i}-1.png")
-            exit()
 
 
 if __name__ == "__main__":
