@@ -14,6 +14,20 @@ from dataset import Dataset
 from constant import *
 
 
+def save_tensor_as_image(x, y, output, save_dir):
+    x = x.cpu()
+    y = y.cpu()
+    output = output.cpu()
+    for i in range(x.shape[0]):
+        x_image = torchvision.transforms.functional.to_pil_image(x[i])
+        y_image = torchvision.transforms.functional.to_pil_image(y[i])
+        output_image = torchvision.transforms.functional.to_pil_image(output[i])
+        os.makedirs(save_dir, exist_ok=True)
+        x_image.save(f"{save_dir}/x{i}.png")
+        y_image.save(f"{save_dir}/y{i}.png")
+        output_image.save(f"{save_dir}/output{i}.png")
+
+
 def calc_loss(model, data_loader, device):
     with torch.no_grad():
         loss = 0
@@ -22,10 +36,13 @@ def calc_loss(model, data_loader, device):
         for minibatch in data_loader:
             x, y = minibatch
             x, y = x.to(device), y.to(device)
-            reconstruct = model.forward(x)
-            curr_loss = torch.nn.functional.mse_loss(reconstruct, x)
+            output = model.forward(x)
+            curr_loss = torch.nn.functional.mse_loss(output, x)
             loss += curr_loss.item() * x.shape[0]
-            data_num += 1
+            data_num += x.shape[0]
+
+            IMAGE_SAVE_PATH = "./result/valid_image/"
+            save_tensor_as_image(x, y, output, IMAGE_SAVE_PATH)
 
         loss /= data_num
     return loss
@@ -59,7 +76,7 @@ def main():
     print(train_size, valid_size)
     trainset, validset = torch.utils.data.random_split(trainset, [train_size, valid_size])
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
-    validloader = torch.utils.data.DataLoader(validset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    validloader = torch.utils.data.DataLoader(validset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     # create model
     model = CNNModel(IMAGE_WIDTH, IMAGE_CHANNEL, args.hidden_size)
@@ -86,6 +103,7 @@ def main():
             x, y = minibatch
             x, y = x.to(device), y.to(device)
             output = model.forward(x)
+            save_tensor_as_image(x, y, output, "./result/train_image")
             loss = torch.nn.functional.mse_loss(output, x, reduction="none").mean([1, 2, 3])
             loss = loss.mean()
 

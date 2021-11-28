@@ -50,7 +50,7 @@ class CNNModel(nn.Module):
         self.conv2 = Conv2dWithBatchNorm(in_channels=down_channel_num[0], out_channels=down_channel_num[1], kernel_size=3)
 
         self.blocks = nn.Sequential()
-        block_num = 4
+        block_num = 3
         for i in range(block_num):
             self.blocks.add_module(f"block{i}", ResidualBlock(down_channel_num[-1], kernel_size=3, reduction=8))
 
@@ -60,20 +60,29 @@ class CNNModel(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)
 
     def forward(self, x):
+        short_cut1 = x
         x = self.conv1(x)
         x = F.relu(x)
         x = self.pool(x)
+
+        short_cut2 = x
         x = self.conv2(x)
         x = F.relu(x)
         x = self.pool(x)
 
+        short_cut3 = x
+
         # Residual Block
         x = self.blocks(x)
 
-        # reconstruct
+        x = x + short_cut3
+
         r = self.t_conv1(x)
         r = F.relu(r)
+        r = r + short_cut2
+        
         r = self.t_conv2(r)
-        r = torch.tanh(r)
+        r = torch.sigmoid(r)
+        r = r + short_cut1
 
         return r
