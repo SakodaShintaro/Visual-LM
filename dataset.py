@@ -1,6 +1,7 @@
 import torch
 import PIL.Image
 import PIL.ImageDraw
+import PIL.ImageFont
 import torchvision
 from constant import *
 
@@ -35,9 +36,11 @@ class Dataset(torch.utils.data.Dataset):
         image = PIL.Image.new('L', canvasSize, background_color)
         draw = PIL.ImageDraw.Draw(image)
 
+        font = PIL.ImageFont.truetype("/usr/share/fonts/truetype/fonts-japanese-gothic.ttf", 25)
+
         # 用意した画像に文字列を描く
-        textWidth, textHeight = draw.textsize(text)
+        textWidth, textHeight = draw.textsize(text, font=font)
         textTopLeft = (canvasSize[0] // 6, canvasSize[1] // 2 - textHeight // 2)  # 前から1/6，上下中央に配置
-        draw.text(textTopLeft, text, fill=text_color)
+        draw.text(textTopLeft, text, font=font, fill=text_color)
 
         return image
