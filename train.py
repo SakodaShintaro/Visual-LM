@@ -12,6 +12,7 @@ from PIL import Image
 from model import CNNModel
 from dataset import Dataset
 from constant import *
+from unet_model import UNet
 
 
 def save_tensor_as_image(x, y, output, save_dir):
@@ -59,11 +60,11 @@ def mixup_data(x, y, alpha=1.0):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--hidden_size", type=int, default=512)
-    parser.add_argument("--epoch", type=int, default=100)
+    parser.add_argument("--hidden_size", type=int, default=256)
+    parser.add_argument("--epoch", type=int, default=500)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--saved_model_path", type=str, default=None)
-    parser.add_argument("--learning_rate", type=float, default=1)
+    parser.add_argument("--learning_rate", type=float, default=0.1)
     args = parser.parse_args()
 
     # prepare data_loader
@@ -77,6 +78,7 @@ def main():
 
     # create model
     model = CNNModel(IMAGE_WIDTH, IMAGE_CHANNEL, args.hidden_size)
+    model = UNet(1, 1)
     if args.saved_model_path is not None:
         model.load_state_dict(torch.load(args.saved_model_path))
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -105,7 +107,7 @@ def main():
             loss = loss.mean()
 
             elapsed = time.time() - start
-            loss_str = f"{elapsed:.1f}\t{epoch + 1}\t{step + 1}\t{loss:.4f}\t{loss:.4f}"
+            loss_str = f"{elapsed:.1f}\t{epoch + 1}\t{step + 1}\t{loss:.4f}"
             series = pd.Series([elapsed, int(epoch + 1), loss.item()], index=train_df.columns)
             train_df = train_df.append(series, ignore_index=True)
             os.makedirs(os.path.dirname(TRAIN_LOSS_SAVE_PATH), exist_ok=True)

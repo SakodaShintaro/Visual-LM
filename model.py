@@ -63,12 +63,12 @@ class CNNModel(nn.Module):
         short_cut1 = x
         x = self.conv1(x)
         x = F.relu(x)
-        x = self.pool(x)
+        # x = self.pool(x)
 
         short_cut2 = x
         x = self.conv2(x)
         x = F.relu(x)
-        x = self.pool(x)
+        # x = self.pool(x)
 
         short_cut3 = x
 
@@ -77,11 +77,11 @@ class CNNModel(nn.Module):
 
         x = x + short_cut3
 
-        r = self.t_conv1(x)
-        r = F.relu(r)
+        # r = self.t_conv1(x)
+        r = F.relu(x)
         r = r + short_cut2
         
-        r = self.t_conv2(r)
+        # r = self.t_conv2(r)
         r = torch.sigmoid(r)
         r = r + short_cut1
 
