@@ -8,7 +8,7 @@ class UNet(nn.Module):
         super(UNet, self).__init__()
         self.model = smp.Unet(
             encoder_name="resnet34",
-            encoder_weights="imagenet",
+            encoder_weights=None,
             in_channels=in_channels,
             classes=classes,
         )
