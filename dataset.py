@@ -8,7 +8,7 @@ from constant import *
 class Dataset(torch.utils.data.Dataset):
     def __init__(self):
         self.term_num = 2
-        self.upper_bound = 10
+        self.upper_bound = 100
 
     def __getitem__(self, index):
         a = index // self.upper_bound
@@ -36,11 +36,13 @@ class Dataset(torch.utils.data.Dataset):
         image = PIL.Image.new('L', canvasSize, background_color)
         draw = PIL.ImageDraw.Draw(image)
 
-        font = PIL.ImageFont.truetype("/usr/share/fonts/truetype/fonts-japanese-gothic.ttf", 25)
+        font = PIL.ImageFont.truetype("/usr/share/fonts/truetype/fonts-japanese-gothic.ttf", 16)
 
         # 用意した画像に文字列を描く
         textWidth, textHeight = draw.textsize(text, font=font)
-        textTopLeft = (canvasSize[0] // 6, canvasSize[1] // 2 - textHeight // 2)  # 前から1/6，上下中央に配置
+        textTopLeft = (canvasSize[0] // 8, canvasSize[1] // 2 - textHeight // 2)  # 前から1/6，上下中央に配置
+        assert textTopLeft[1] + textHeight < IMAGE_WIDTH
+        assert textTopLeft[0] + textWidth < IMAGE_WIDTH
         draw.text(textTopLeft, text, font=font, fill=text_color)
 
         return image
