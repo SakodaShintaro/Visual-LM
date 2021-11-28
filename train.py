@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
-from model import CNNModel
 from dataset import Dataset
 from constant import *
 from unet_model import UNet
@@ -77,7 +76,6 @@ def main():
     validloader = torch.utils.data.DataLoader(validset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     # create model
-    model = CNNModel(IMAGE_WIDTH, IMAGE_CHANNEL, args.hidden_size)
     model = UNet(1, 1)
     if args.saved_model_path is not None:
         model.load_state_dict(torch.load(args.saved_model_path))
