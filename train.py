@@ -7,8 +7,6 @@ import argparse
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from PIL import Image
 from dataset import Dataset
 from constant import *
 from unet_model import UNet
@@ -132,14 +130,6 @@ def main():
             torch.save(model.state_dict(), MODEL_SAVE_PATH)
 
         scheduler.step()
-
-    # load best model
-    model.load_state_dict(torch.load(MODEL_SAVE_PATH))
-
-    # plot validation loss
-    valid_df.plot(x="epoch", y=['loss'], subplots=True, marker=".", figsize=(16, 9))
-    plt.savefig('./result/loss_log/valid_loss.png', bbox_inches="tight", pad_inches=0.05)
-    plt.clf()
 
 
 if __name__ == "__main__":
