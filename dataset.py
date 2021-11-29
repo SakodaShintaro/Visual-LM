@@ -7,24 +7,27 @@ from constant import *
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self):
-        self.operation_num = 2
+        self.operation_list = ["plus", "minus", "mult"]
         self.term_num = 2
         self.upper_bound = 100
         self.num_per_op = (self.upper_bound ** self.term_num)
 
     def __getitem__(self, index):
-        minus = False
-        if index >= self.num_per_op:
-            minus = True
-            index -= self.num_per_op
+        op = index // self.num_per_op
+        index %= self.num_per_op
         a = index // self.upper_bound
         b = index % self.upper_bound
-        if minus:
-            text_input = f"{a}-{b}="
-            text_target = f"{a}-{b}={a-b}"
-        else:
+        if self.operation_list[op] == "plus":
             text_input = f"{a}+{b}="
             text_target = f"{a}+{b}={a+b}"
+        elif self.operation_list[op] == "minus":
+            text_input = f"{a}-{b}="
+            text_target = f"{a}-{b}={a-b}"
+        elif self.operation_list[op] == "mult":
+            text_input = f"{a}*{b}="
+            text_target = f"{a}*{b}={a*b}"
+        else:
+            assert False
         image_input = self.generage_image(text_input)
         image_target = self.generage_image(text_target)
         image_input = torchvision.transforms.functional.to_tensor(image_input)
@@ -32,7 +35,7 @@ class Dataset(torch.utils.data.Dataset):
         return image_input, image_target
 
     def __len__(self):
-        return self.operation_num * self.num_per_op
+        return len(self.operation_list) * self.num_per_op
 
     def generage_image(self, text):
         # 参考) https://qiita.com/implicit_none/items/a9bf7eebe125c9d773eb
