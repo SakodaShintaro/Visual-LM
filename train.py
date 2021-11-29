@@ -46,18 +46,9 @@ def calc_loss(model, data_loader, device):
     return loss
 
 
-def mixup_data(x, y, alpha=1.0):
-    lam = np.random.beta(alpha, alpha) if alpha > 0 else 1
-    batch_size = x.size()[0]
-    index = torch.randperm(batch_size)
-    mixed_x = lam * x + (1 - lam) * x[index, :]
-    y_a, y_b = y, y[index]
-    return mixed_x, y_a, y_b, lam
-
-
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epoch", type=int, default=50)
+    parser.add_argument("--epoch", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--saved_model_path", type=str, default=None)
     parser.add_argument("--learning_rate", type=float, default=0.1)
