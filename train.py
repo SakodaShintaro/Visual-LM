@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from datetime import timedelta
 import os
 import torch
 import torchvision
@@ -93,7 +94,8 @@ def main():
             loss = loss.mean()
 
             elapsed = time.time() - start
-            loss_str = f"{elapsed:.1f}\t{epoch + 1}\t{step + 1}\t{loss:.4f}"
+            time_str = timedelta(seconds=int(elapsed))
+            loss_str = f"{time_str}\t{epoch + 1}\t{step + 1}\t{loss:.4f}"
             series = pd.Series([elapsed, int(epoch + 1), loss.item()], index=train_df.columns)
             train_df = train_df.append(series, ignore_index=True)
             os.makedirs(os.path.dirname(TRAIN_LOSS_SAVE_PATH), exist_ok=True)
