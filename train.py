@@ -109,11 +109,12 @@ def main():
         # validation
         valid_loss = calc_loss(model, validloader, device)
         elapsed = time.time() - start
+        time_str = timedelta(seconds=int(elapsed))
         series = pd.Series([elapsed, int(epoch + 1), valid_loss], index=valid_df.columns)
         valid_df = valid_df.append(series, ignore_index=True)
         os.makedirs(os.path.dirname(VALID_LOSS_SAVE_PATH), exist_ok=True)
         valid_df.to_csv(VALID_LOSS_SAVE_PATH, sep="\t")
-        loss_str = f"{elapsed:.1f}\t{epoch + 1}\t{valid_loss:.4f}"
+        loss_str = f"{time_str}\t{epoch + 1}\t{valid_loss:.4f}"
         print(" " * 100, end="\r")
         print(loss_str)
 
