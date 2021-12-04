@@ -50,9 +50,9 @@ def calc_loss(model, data_loader, device):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--epoch", type=int, default=100)
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--saved_model_path", type=str, default=None)
-    parser.add_argument("--learning_rate", type=float, default=0.1)
+    parser.add_argument("--learning_rate", type=float, default=0.05)
     args = parser.parse_args()
 
     # prepare data_loader

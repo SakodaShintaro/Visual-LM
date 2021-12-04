@@ -2,6 +2,7 @@ import torch
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
+import random
 import torchvision
 from constant import *
 
@@ -29,8 +30,8 @@ class Dataset(torch.utils.data.Dataset):
             text_target = f"{a}*{b}={a*b}"
         else:
             assert False
-        image_input = self.generage_image(text_input)
-        image_target = self.generage_image(text_target)
+        image_target, text_x, text_y = self.generage_image(text_target)
+        image_input, _, _ = self.generage_image(text_input, text_x, text_y)
         image_input = torchvision.transforms.functional.to_tensor(image_input)
         image_target = torchvision.transforms.functional.to_tensor(image_target)
         return image_input, image_target
@@ -38,7 +39,7 @@ class Dataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.operation_list) * self.num_per_op
 
-    def generage_image(self, text):
+    def generage_image(self, text, text_x=None, text_y=None):
         # 参考) https://qiita.com/implicit_none/items/a9bf7eebe125c9d773eb
 
         # 画像サイズ，背景色，フォントの色を設定
@@ -54,9 +55,13 @@ class Dataset(torch.utils.data.Dataset):
 
         # 用意した画像に文字列を描く
         text_width, text_height = draw.textsize(text, font=font)
-        text_pos = (canvas_size[0] // 2 - text_width // 2, canvas_size[1] // 2 - text_height // 2)  # 上下左右中央に配置
+        if text_x is None:
+            text_x = random.randrange(canvas_size[0] - text_width)
+        if text_y is None:
+            text_y = random.randrange(canvas_size[1] - text_height)
+        text_pos = (text_x, text_y)  # 上下左右中央に配置
         assert text_pos[1] + text_height < IMAGE_HEIGHT
         assert text_pos[0] + text_width < IMAGE_WIDTH
         draw.text(text_pos, text, font=font, fill=text_color)
 
-        return image
+        return image, text_x, text_y
