@@ -51,14 +51,24 @@ class Dataset(torch.utils.data.Dataset):
         image = PIL.Image.new('L', canvas_size, background_color)
         draw = PIL.ImageDraw.Draw(image)
 
-        font = PIL.ImageFont.truetype("/usr/share/fonts/truetype/fonts-japanese-gothic.ttf", 16)
+        fonts = [
+            "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
+            # "/usr/share/fonts/truetype/fonts-japanese-mincho.ttf",
+            # "/usr/share/fonts/truetype/Gargi/Gargi.ttf",
+            ]
+
+        random_index = random.randrange(0, len(fonts))
+
+        font = PIL.ImageFont.truetype(fonts[random_index], 18)
 
         # 用意した画像に文字列を描く
         text_width, text_height = draw.textsize(text, font=font)
         if text_x is None:
-            text_x = random.randrange(canvas_size[0] - text_width)
+            # text_x = random.randrange(canvas_size[0] - text_width)
+            text_x = 5
         if text_y is None:
-            text_y = random.randrange(canvas_size[1] - text_height)
+            # text_y = random.randrange(canvas_size[1] - text_height)
+            text_y = canvas_size[1] / 2 - text_height / 2
         text_pos = (text_x, text_y)  # 上下左右中央に配置
         assert text_pos[1] + text_height < IMAGE_HEIGHT
         assert text_pos[0] + text_width < IMAGE_WIDTH
