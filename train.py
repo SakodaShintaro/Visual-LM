@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from dataset import Dataset
 from constant import *
+from perceiver_model import PerceiverSegModel
 from unet_model import UNet
 
 
@@ -50,7 +51,7 @@ def calc_loss(model, data_loader, device):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--epoch", type=int, default=100)
-    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--saved_model_path", type=str, default=None)
     parser.add_argument("--learning_rate", type=float, default=0.05)
     args = parser.parse_args()
@@ -65,7 +66,8 @@ def main():
     validloader = torch.utils.data.DataLoader(validset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     # create model
-    model = UNet(IMAGE_CHANNEL, IMAGE_CHANNEL)
+    # model = UNet(IMAGE_CHANNEL, IMAGE_CHANNEL)
+    model = PerceiverSegModel(IMAGE_CHANNEL)
     if args.saved_model_path is not None:
         model.load_state_dict(torch.load(args.saved_model_path))
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

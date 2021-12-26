@@ -61,3 +61,12 @@ class CNNModel(nn.Module):
         x = self.final_conv(x)
         x = torch.sigmoid(x)
         return x
+
+
+if __name__ == "__main__":
+    from constant import IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNEL
+    BATCH_SIZE = 2
+    model = CNNModel(input_channel_num=IMAGE_CHANNEL, hidden_size=64).cuda()
+    x = torch.ones([BATCH_SIZE, IMAGE_CHANNEL, IMAGE_HEIGHT, IMAGE_WIDTH]).cuda()
+    out = model(x)
+    print(out.shape)
