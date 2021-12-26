@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from transformers import PerceiverModel
 from transformers.models.perceiver.configuration_perceiver import PerceiverConfig
-from transformers.models.perceiver.modeling_perceiver import PerceiverAbstractDecoder, PerceiverBasicDecoder, PerceiverDecoderOutput, PerceiverImagePreprocessor
+from transformers.models.perceiver.modeling_perceiver import PerceiverBasicDecoder, PerceiverImagePreprocessor
 from constant import IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNEL
 
 
@@ -16,29 +16,6 @@ class PostProcessor(torch.nn.Module):
         x = x.view([-1, 1, IMAGE_HEIGHT, IMAGE_WIDTH])
         x = torch.sigmoid(x)
         return x
-
-
-class PerceiverDecoder(PerceiverAbstractDecoder):
-    def __init__(self, config, output_num_channels, **decoder_kwargs):
-        super().__init__()
-        self.decoder = PerceiverBasicDecoder(
-            config,
-            output_num_channels=output_num_channels,
-            num_channels=32,
-            concat_preprocessed_input=True,
-            **decoder_kwargs)
-
-    @property
-    def num_query_channels(self) -> int:
-        return self.decoder.num_query_channels
-
-    def decoder_query(self, inputs, modality_sizes=None, inputs_without_pos=None, subsampled_points=None):
-        return self.decoder.decoder_query(inputs, modality_sizes, inputs_without_pos, subsampled_points)
-
-    def forward(self, query, z, query_mask=None, output_attentions=False):
-        decoder_outputs = self.decoder(query, z, output_attentions=output_attentions)
-        preds = decoder_outputs.logits
-        return PerceiverDecoderOutput(logits=preds, cross_attentions=decoder_outputs.cross_attentions)
 
 
 class PerceiverSegmentationModel(PerceiverModel):
