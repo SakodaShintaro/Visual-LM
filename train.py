@@ -53,7 +53,7 @@ def main():
     parser.add_argument("--epoch", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--saved_model_path", type=str, default=None)
-    parser.add_argument("--learning_rate", type=float, default=0.05)
+    parser.add_argument("--learning_rate", type=float, default=0.005)
     args = parser.parse_args()
 
     # prepare data_loader
