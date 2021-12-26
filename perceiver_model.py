@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
-
 import torch
 from torch import nn
 from transformers import PerceiverModel
 from transformers.models.perceiver.configuration_perceiver import PerceiverConfig
 from transformers.models.perceiver.modeling_perceiver import PerceiverBasicDecoder
-from cnn_model import Conv2dWithBatchNorm
 from constant import IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNEL
 from transformers.models.perceiver.modeling_perceiver import PerceiverImagePreprocessor
+
 
 class PostProcessor(torch.nn.Module):
     def __init__(self):
         super().__init__()
-    
+
     def forward(self, x, *args, **keywords):
         x = x.permute([0, 2, 1])
         x = x.view([-1, 1, IMAGE_HEIGHT, IMAGE_WIDTH])
         x = torch.sigmoid(x)
         return x
-
 
 
 class PerceiverSegmentationModel(PerceiverModel):
@@ -55,10 +53,8 @@ class PerceiverSegModel(nn.Module):
         self.main_model = PerceiverSegmentationModel(config, pos_encoding_num_channels=hidden_size, output_num_channels=input_channel_num)
 
     def forward(self, x):
-        input_shape = x.shape
         out = self.main_model(x)
-        x = out.logits
-        return x
+        return out.logits
 
 
 if __name__ == "__main__":
