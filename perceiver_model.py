@@ -19,30 +19,31 @@ class PostProcessor(torch.nn.Module):
 
 
 class PerceiverSegmentationModel(PerceiverModel):
-    def __init__(self, config, pos_encoding_num_channels, output_num_channels):
+    def __init__(self, input_num_channels):
+        hidden_size = 32
+        config = PerceiverConfig(d_model=hidden_size, d_latents=80)
         super().__init__(config)
         self.config = config
-        trainable_position_encoding_kwargs = dict(
-            index_dims=IMAGE_HEIGHT * IMAGE_WIDTH, num_channels=pos_encoding_num_channels
-        )
         self.input_preprocessor = PerceiverImagePreprocessor(
             config,
             prep_type="conv1x1",
             spatial_downsample=1,
-            in_channels=1,
-            out_channels=pos_encoding_num_channels,
+            in_channels=input_num_channels,
+            out_channels=hidden_size,
             position_encoding_type="trainable",
             concat_or_add_pos="add",
-            project_pos_dim=pos_encoding_num_channels,
-            trainable_position_encoding_kwargs=trainable_position_encoding_kwargs
+            project_pos_dim=hidden_size,
+            trainable_position_encoding_kwargs=dict(
+                index_dims=IMAGE_HEIGHT * IMAGE_WIDTH, num_channels=hidden_size
+            )
         )
         self.decoder = PerceiverBasicDecoder(
             config,
-            output_num_channels=output_num_channels,
-            num_channels=pos_encoding_num_channels * 2,
+            output_num_channels=input_num_channels,
+            num_channels=hidden_size * 2,
             concat_preprocessed_input=True,
             trainable_position_encoding_kwargs=dict(
-                index_dims=IMAGE_HEIGHT * IMAGE_WIDTH, num_channels=pos_encoding_num_channels
+                index_dims=IMAGE_HEIGHT * IMAGE_WIDTH, num_channels=hidden_size
             ))
         self.output_postprocessor = PostProcessor()
 
@@ -53,9 +54,7 @@ class PerceiverSegmentationModel(PerceiverModel):
 class PerceiverSegModel(nn.Module):
     def __init__(self, input_channel_num):
         super(PerceiverSegModel, self).__init__()
-        hidden_size = 32
-        config = PerceiverConfig(d_model=hidden_size, d_latents=80)
-        self.main_model = PerceiverSegmentationModel(config, pos_encoding_num_channels=hidden_size, output_num_channels=input_channel_num)
+        self.main_model = PerceiverSegmentationModel(input_num_channels=input_channel_num)
 
     def forward(self, x):
         out = self.main_model(x)
