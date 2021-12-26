@@ -21,17 +21,19 @@ class PostProcessor(torch.nn.Module):
 class PerceiverDecoder(PerceiverAbstractDecoder):
     def __init__(self, config, output_num_channels, **decoder_kwargs):
         super().__init__()
-        self.output_num_channels = output_num_channels
-        self.decoder = PerceiverBasicDecoder(config, output_num_channels=output_num_channels, num_channels=32, **decoder_kwargs)
+        self.decoder = PerceiverBasicDecoder(
+            config,
+            output_num_channels=output_num_channels,
+            num_channels=32,
+            concat_preprocessed_input=True,
+            **decoder_kwargs)
 
     @property
     def num_query_channels(self) -> int:
         return self.decoder.num_query_channels
 
     def decoder_query(self, inputs, modality_sizes=None, inputs_without_pos=None, subsampled_points=None):
-        if subsampled_points is not None:
-            raise ValueError("FlowDecoder doesn't support subsampling yet.")
-        return inputs
+        return self.decoder.decoder_query(inputs, modality_sizes, inputs_without_pos, subsampled_points)
 
     def forward(self, query, z, query_mask=None, output_attentions=False):
         decoder_outputs = self.decoder(query, z, output_attentions=output_attentions)
@@ -57,8 +59,14 @@ class PerceiverSegmentationModel(PerceiverModel):
             project_pos_dim=pos_encoding_num_channels,
             trainable_position_encoding_kwargs=trainable_position_encoding_kwargs
         )
-        self.decoder = PerceiverDecoder(config, output_num_channels=output_num_channels,
-                                        trainable_position_encoding_kwargs=trainable_position_encoding_kwargs)
+        self.decoder = PerceiverBasicDecoder(
+            config,
+            output_num_channels=output_num_channels,
+            num_channels=pos_encoding_num_channels * 2,
+            concat_preprocessed_input=True,
+            trainable_position_encoding_kwargs=dict(
+                index_dims=IMAGE_HEIGHT * IMAGE_WIDTH, num_channels=pos_encoding_num_channels
+            ))
         self.output_postprocessor = PostProcessor()
 
     def postprocess(logits: torch.Tensor, *args, **keywords):
