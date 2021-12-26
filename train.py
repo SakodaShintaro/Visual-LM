@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from dataset import Dataset
 from constant import *
-from perceiver_model import PerceiverSegModel
+from perceiver_model import PerceiverRapperModel
 from unet_model import UNet
 
 
@@ -67,7 +67,7 @@ def main():
 
     # create model
     # model = UNet(IMAGE_CHANNEL, IMAGE_CHANNEL)
-    model = PerceiverSegModel(IMAGE_CHANNEL)
+    model = PerceiverRapperModel(IMAGE_CHANNEL, IMAGE_HEIGHT, IMAGE_WIDTH)
     if args.saved_model_path is not None:
         model.load_state_dict(torch.load(args.saved_model_path))
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

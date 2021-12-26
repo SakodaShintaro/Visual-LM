@@ -34,7 +34,7 @@ class Dataset(torch.utils.data.Dataset):
         image_input, _, _ = self.generage_image(text_input, text_x, text_y)
         image_input = torchvision.transforms.functional.to_tensor(image_input)
         image_target = torchvision.transforms.functional.to_tensor(image_target)
-        return image_input, image_target
+        return image_input, image_input
 
     def __len__(self):
         return len(self.operation_list) * self.num_per_op
