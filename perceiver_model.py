@@ -3,9 +3,8 @@ import torch
 from torch import nn
 from transformers import PerceiverModel
 from transformers.models.perceiver.configuration_perceiver import PerceiverConfig
-from transformers.models.perceiver.modeling_perceiver import PerceiverBasicDecoder
+from transformers.models.perceiver.modeling_perceiver import PerceiverAbstractDecoder, PerceiverBasicDecoder, PerceiverDecoderOutput, PerceiverImagePreprocessor
 from constant import IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNEL
-from transformers.models.perceiver.modeling_perceiver import PerceiverImagePreprocessor
 
 
 class PostProcessor(torch.nn.Module):
@@ -17,6 +16,27 @@ class PostProcessor(torch.nn.Module):
         x = x.view([-1, 1, IMAGE_HEIGHT, IMAGE_WIDTH])
         x = torch.sigmoid(x)
         return x
+
+
+class PerceiverDecoder(PerceiverAbstractDecoder):
+    def __init__(self, config, output_num_channels, **decoder_kwargs):
+        super().__init__()
+        self.output_num_channels = output_num_channels
+        self.decoder = PerceiverBasicDecoder(config, output_num_channels=output_num_channels, num_channels=32, **decoder_kwargs)
+
+    @property
+    def num_query_channels(self) -> int:
+        return self.decoder.num_query_channels
+
+    def decoder_query(self, inputs, modality_sizes=None, inputs_without_pos=None, subsampled_points=None):
+        if subsampled_points is not None:
+            raise ValueError("FlowDecoder doesn't support subsampling yet.")
+        return inputs
+
+    def forward(self, query, z, query_mask=None, output_attentions=False):
+        decoder_outputs = self.decoder(query, z, output_attentions=output_attentions)
+        preds = decoder_outputs.logits
+        return PerceiverDecoderOutput(logits=preds, cross_attentions=decoder_outputs.cross_attentions)
 
 
 class PerceiverSegmentationModel(PerceiverModel):
@@ -37,8 +57,8 @@ class PerceiverSegmentationModel(PerceiverModel):
             project_pos_dim=pos_encoding_num_channels,
             trainable_position_encoding_kwargs=trainable_position_encoding_kwargs
         )
-        self.decoder = PerceiverBasicDecoder(config, output_num_channels=output_num_channels, num_channels=pos_encoding_num_channels,
-                                             trainable_position_encoding_kwargs=trainable_position_encoding_kwargs)
+        self.decoder = PerceiverDecoder(config, output_num_channels=output_num_channels,
+                                        trainable_position_encoding_kwargs=trainable_position_encoding_kwargs)
         self.output_postprocessor = PostProcessor()
 
     def postprocess(logits: torch.Tensor, *args, **keywords):
