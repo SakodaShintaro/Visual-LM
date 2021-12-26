@@ -20,7 +20,7 @@ class PostProcessor(torch.nn.Module):
         return x
 
 
-class PerceiverSegmentationModel(PerceiverModel):
+class PerceiverImageReconstructModel(PerceiverModel):
     def __init__(self, image_channels, image_height, image_width):
         hidden_size = 32
         config = PerceiverConfig(d_model=hidden_size, d_latents=80)
@@ -53,7 +53,7 @@ class PerceiverSegmentationModel(PerceiverModel):
 class PerceiverRapperModel(nn.Module):
     def __init__(self, image_channels, image_height, image_width):
         super(PerceiverRapperModel, self).__init__()
-        self.model = PerceiverSegmentationModel(image_channels, image_height, image_width)
+        self.model = PerceiverImageReconstructModel(image_channels, image_height, image_width)
 
     def forward(self, x):
         out = self.model(x)
